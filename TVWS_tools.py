@@ -33,11 +33,10 @@ def findPlace(filters, value):
             if valIndex > filters.index("ip.dst"): skipCount += 1
             if valIndex > filters.index("ip.proto"): skipCount += 1
     else:
-        skipCount = 0
-        #if valIndex > filters.index("ip.src"): skipCount += 1
-        #if valIndex > filters.index("ip.dst"): skipCount += 1
-        #if valIndex > filters.index("ip.proto"): skipCount += 1
-        #if valIndex > filters.index("ip.ttl"): skipCount += 1
+        if valIndex > filters.index("ip.src"): skipCount += 1
+        if valIndex > filters.index("ip.dst"): skipCount += 1
+        if valIndex > filters.index("ip.proto"): skipCount += 1
+        if valIndex > filters.index("ip.ttl"): skipCount += 1
 
     return skipCount
 
@@ -113,13 +112,7 @@ def calc(directory, graph, filters):
                     icmpCheck = row[0].rstrip()
                     line = row[indx].rstrip()
                     
-                    if value == "tcp.srcport":
-                        try:
-                            print(row[indx])
-                            total += 1
-                        except:
-                            continue
-                    elif icmpCheck != "3" and line:
+                    if icmpCheck != "3" and line:
                         if calc == "total":
                             try:
                                 #print("SUCCESS: ", row[indx])
