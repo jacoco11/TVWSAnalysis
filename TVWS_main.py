@@ -1,5 +1,8 @@
 import os
+import TVWS_process
 import TVWS_tools
+import TVWS_tools2
+import TVWS_graph
 
 # Globals
 directory = None
@@ -47,7 +50,7 @@ def set_filters():
                   "\nNone of the above arguments clears filter and adds in one or more fields, separating with a space")
         elif fltrs[0] == "add":
             for item in fltrs:
-                if item!= "icmp.type" and item not in filters and item != "add":
+                if item != "add" and item not in filters:
                     filters.append(item)
             print("Filter(s) added. ")
         elif fltrs[0] == "remove":
@@ -63,7 +66,7 @@ def set_filters():
         else:
             filters.clear()
             for item in fltrs:
-                if item != "icmp.type": filters.append(item)
+                filters.append(item)
             print("Filter(s) added. ")
 
 
@@ -119,7 +122,7 @@ def main():
         elif choice == "graph":
             set_graph()
         elif choice == "process":
-            TVWS_tools.process(directory, filters)
+            TVWS_process.process(directory, filters)
         elif choice == "tools":
             loop2 = True
             while loop2:
@@ -130,13 +133,14 @@ def main():
                           "\n- 'calc' : Calculates total and averages among values" +
                           "\n- 'graph' : Plots desired data points")
                 elif choice2 == "calc":
-                    totalValue, total, avgValue, avg = TVWS_tools.calc(directory, graph, filters)
+                    totalValue, total, avgValue, avg, count = TVWS_tools2.calc(directory, filters)
                     totalCalcs[totalValue] = total
                     avgCalcs[avgValue] = avg
                     print("TOTAL: ", totalCalcs[totalValue])
                     print("AVERAGE: ", avgCalcs[avgValue])
+                    print("COUNT: ", count)
                 elif choice2 == "graph":
-                    TVWS_tools.graph(directory, graph, filters)
+                    TVWS_graph.graph(directory, graph, filters)
                 elif choice2 == "exit":
                     loop2 = False
                 else: print("Invalid command, re-enter. ")
