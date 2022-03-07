@@ -26,7 +26,7 @@ def calc(directory, filters):
             print("Tools/Calc Info: " +
                   "\nInput: " +
                   "\n- 'count' : Calculates the amount of occurrences of a value" +
-                  "\n- 'totaL' : Calculates the total of a value" +
+                  "\n- 'total' : Calculates the total of a value" +
                   "\n- 'avg' : Calculates the average of a value")
         else: print("Invalid function, re-enter. ")
     check2 = True

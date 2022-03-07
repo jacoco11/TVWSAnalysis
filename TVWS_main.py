@@ -17,7 +17,7 @@ def set_directory():
     global directory
     loop2 = True
     while loop2:
-        inpt = input("Enter directory: ")
+        inpt = input("Enter directory: " + "\n- Type info for help:\n")
         if inpt == "exit": loop2 = False
         elif inpt == "list": print(directory)
         elif inpt == "info":
@@ -37,7 +37,7 @@ def set_filters():
     global filters
     loop2 = True
     while loop2:
-        fltrs = list(input("Enter filters: ").split())
+        fltrs = list(input("Enter filters: " + "\n- Type info for help:\n").split())
         if fltrs[0] == "exit": loop2 = False
         elif fltrs[0] == "info":
             print("Set_Filter Info: " +
@@ -75,7 +75,7 @@ def set_graph():
     global graph
     loop2 = True
     while loop2:
-        choice = input("Select graph type: ")
+        choice = input("Select graph type (plot/bar/scatter): " + "\n- Type info for help:\n")
         if choice == "exit":
             loop2 = False
         elif choice == "info":
@@ -99,7 +99,8 @@ def main():
     global totalCalcs
     global avgCalcs
 
-    print("PCAP Trace Processing Tool")
+    print("PCAP Trace Processing Tool" +
+    "\n- Type info for help:")
     loop = True
 
     while loop:

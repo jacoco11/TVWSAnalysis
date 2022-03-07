@@ -1,6 +1,6 @@
 import os
 import csv
-'''import pyqtgraph as pg'''
+import pyqtgraph as pg
 import matplotlib.pyplot as plt
 import numpy as np
 
