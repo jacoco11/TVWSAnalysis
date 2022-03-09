@@ -1,7 +1,7 @@
 import os
 import csv
 import pyqtgraph as pg
-import matplotlib.pyplot as plt
+from  matplotlib import pyplot as plt
 import numpy as np
 
 
@@ -23,7 +23,27 @@ def graph(directory, graph, filters):
         indx2 = int(filters.index(value2))
 
         if graph == "plot":
-            print()
+            plt.figure()
+            plt.rcParams["figure.autolayout"] = True
+            #bytes = [0.01, 0.05, 0.1, 0.5, 1]
+            #flight = [50, 100, 500, 1000, 10000]
+            for file in os.listdir(directory):
+                if file.endswith(".csv"):
+                    with open(os.path.join(directory, file)) as f:
+                        csv_reader = csv.reader(f, delimiter=',')
+                        i = 0
+                        for row in csv_reader:
+                            i = i+1
+                            print(i)
+                            if not row[indx2]:
+                                continue
+                            elif not row[indx1]:
+                                continue
+                            else:
+                             plt.plot(row[indx1], row[indx2], '*')
+            plt.xlabel(value1)
+            plt.ylabel(value2)
+            plt.show()
 
         elif graph == "scatter":
             print()
