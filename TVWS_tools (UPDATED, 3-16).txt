@@ -1,0 +1,252 @@
+import os
+import csv
+import subprocess
+#import pyshark
+#import nest_asyncio
+
+# GLOBALS
+count = 0
+total = 0
+average = []
+#nest_asyncio.apply()
+
+
+# Secondary calc function which can perform calculations to obtain general TCP/UDP flow statistics
+def calc2(func, filt, directory, file, proto):
+    if proto == 1: end = "_tcpflow.csv"
+    else: end = "_udpflow.csv"
+
+    if file.endswith(end):
+        if func == "count":
+            if filt == "flw_tcpflows" or filt == "flw_udpflows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($1!=\\\"\\\"){count=count+1}END{print count}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                flowCount = int(proc.communicate()[0].decode('ascii'))
+                return flowCount
+            if filt == "successfulTCPFlows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($13==\\\"success\\\"){count=count+1}END{print count}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                successfulFlowCount = int(proc.communicate()[0].decode('ascii'))
+                return successfulFlowCount
+            elif filt == "failedTCPFlows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($13==\\\"fail\\\"){count=count+1}END{print count}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                failedFlowCount = int(proc.communicate()[0].decode('ascii'))
+                return failedFlowCount
+            elif filt == "pkt_tcpflows" or filt == "pkt_udpflows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($5!=\\\"\\\"){count=count+$5}END{print count}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                packetCount = int(proc.communicate()[0].decode('ascii'))
+                return packetCount
+            elif filt == "uppkt_tcpflows" or filt == "uppkt_udpflows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($7!=\\\"\\\"){count=count+$7}END{print count}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                packetCount = int(proc.communicate()[0].decode('ascii'))
+                return packetCount
+            elif filt == "dwpkt_tcpflows" or filt == "dwpkt_udpflows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($9!=\\\"\\\"){count=count+$9}END{print count}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                packetCount = int(proc.communicate()[0].decode('ascii'))
+                return packetCount
+        elif func == "total":
+            if filt == "flwsiz_tcpflows" or filt == "flwsiz_udpflows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($6!=\\\"\\\"){total=total+$6}END{print total}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                flowsizeTotal = int(proc.communicate()[0].decode('ascii'))
+                return flowsizeTotal
+            elif filt == "upflwsiz_tcpflows" or filt == "upflwsiz_udpflows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($8!=\\\"\\\"){total=total+$8}END{print total}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                flowsizeTotal = int(proc.communicate()[0].decode('ascii'))
+                return flowsizeTotal
+            elif filt == "dwflwsiz_tcpflows" or filt == "dwflwsiz_udpflows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($10!=\\\"\\\"){total=total+$10}END{print total}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                flowsizeTotal = int(proc.communicate()[0].decode('ascii'))
+                return flowsizeTotal
+            elif filt == "flwsiz_successfulTCPFlows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($13==\\\"success\\\"){total=total+$6}END{print total}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                flowsizeTotal = int(proc.communicate()[0].decode('ascii'))
+                return flowsizeTotal
+            elif filt == "flwsiz_failedTCPFlows":
+                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($13==\\\"fail\\\"){total=total+$6}END{print total}\" "
+                                        + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                flowsizeTotal = int(proc.communicate()[0].decode('ascii'))
+                return flowsizeTotal
+        elif func == "avg":
+            if filt == "flwsiz_tcpflows" or filt == "flwsiz_udpflows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($6!=\\\"\\\"){total=total+$6;count=count+1}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+            elif filt == "upflwsiz_tcpflows" or filt == "upflwsiz_udpflows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($8!=\\\"\\\"){total=total+$8;count=count+1}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+            elif filt == "dwflwsiz_tcpflows" or filt == "dwflwsiz_udpflows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($10!=\\\"\\\"){total=total+$10;count=count+1}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+            elif filt == "flwsiz_successfulTCPFlows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($13==\\\"success\\\"){total=total+$6;count=count+1}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+            elif filt == "flwsiz_failedTCPFlows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($13==\\\"fail\\\"){total=total+$6;count=count+1}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+            elif filt == "pktsiz_tcpflows" or filt == "pktsiz_udpflows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($6!=\\\"\\\"){total=total+$6;count=count+$5}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+            elif filt == "uppktsiz_tcpflows" or filt == "uppktsiz_udpflows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($8!=\\\"\\\"){total=total+$8;count=count+$7}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+            elif filt == "dwpktsiz_tcpflows" or filt == "dwpktsiz_udpflows":
+                proc = subprocess.Popen(
+                    "awk -F \",\" \"BEGIN{total=0;count=0}($10!=\\\"\\\"){total=total+$10;count=count+$9}END{print total,count}\" "
+                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                result = str(proc.communicate()[0].decode('ascii'))
+                results = result.split()
+                return float(results[0]), float(results[1])
+    else:
+        if func == "avg":
+            return 0, 0
+        else:
+            return 0
+
+
+# Primary calc function which can perform calculations to obtain general packet statistics
+def calc(func, filt, filters, directory, proto, filter3, filter4):
+    global count
+    global total
+    global average
+    datefilter = False
+    if filter3 != "" and filter4 != "": datefilter = True
+
+    if filt in filters:
+        indx = (filters.index(filt))
+        indx = indx + 1
+        indx = str(indx)
+
+    count = 0
+    total = 0
+    average.clear()
+
+
+    for file in os.listdir(directory):
+        if file.endswith(".csv"):
+            if datefilter == True:
+                index = 12
+                date = ""
+                while index < 20:
+                    date += file[index]
+                    index += 1
+            if (datefilter == True and date >= filter3 and date <= filter4) or datefilter == False:
+                if func == "count":
+                    if filt in filters:
+                        try:
+                            #command = "awk -F \",\" \"BEGIN{count=0}($"+indx+"!=\\\"\\\"){count=count+1}END{print count}\" " + os.path.join(directory, file)
+                            #subprocess.run(command)
+                            proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($"+indx+"!=\\\"\\\"){count=count+1}END{print count}\" "
+                                                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                            count += int(proc.communicate()[0].decode('ascii'))
+                            #print("COUNT: ", count)
+                        except:
+                            print("ERROR: Could not perform calculation a count calculation. ")
+                            continue
+                    elif filt == "cpkt":
+                        indx1 = filters.index("tcp.analysis.retransmission")
+                        indx1 = indx1 + 1
+                        indx1 = str(indx1)
+                        indx2 = filters.index("tcp.flags")
+                        indx2 = indx2 + 1
+                        indx2 = str(indx2)
+
+                        proc = subprocess.Popen(
+                            "awk -F \",\" \"BEGIN{count=0}($" + indx1 + "!=\\\"\\\"||$" + indx2 + "==\\\"0x00000001\\\"||$" + indx2 +
+                            "==\\\"0x00000002\\\"||$" + indx2 + "==\\\"0x00000010\\\"){count=count+1}END{print count}\" "
+                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                        cpktTotal = int(proc.communicate()[0].decode('ascii'))
+                        count += cpktTotal
+                    else:
+                        if proto == 1: count += calc2(func, filt, directory, file, 1)
+                        else: count += calc2(func, filt, directory, file, 2)
+                elif func == "total":
+                    if filt in filters:
+                        try:
+                            #command = ["awk", "-F", ",", "\"BEGIN{sum=0}{sum=sum+$"+indx+"}END{print", "sum}\"", file]
+                            #subprocess.run(command)
+                            proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($"+indx+"!=\\\"\\\"){total=total+$"+indx+"}END{print total}\" "
+                                                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                            total += float(proc.communicate()[0].decode('ascii'))
+                            #print("TOTAL: ", total)
+                        except:
+                            print("ERROR: Could not perform calculation a total calculation. ")
+                            continue
+                    else:
+                        if proto == 1: total += calc2(func, filt, directory, file, 1)
+                        else: total += calc2(func, filt, directory, file, 2)
+                elif func == "avg":
+                    if filt in filters:
+                        try:
+                            #command = ["awk", "-F", ",", "BEGIN{sum=0;count=0}{sum=sum+$"+indx+";", "count=count+1}END{print", "sum,count}", file]
+                            #subprocess.run(command)
+                            proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0;count=0}($"+indx+"!=\\\"\\\"){total=total+$"+indx+";count=count+1}END{print total,count}\" "
+                                                    + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                            result = str(proc.communicate()[0].decode('ascii'))
+                            results = result.split()
+                            total = float(results[0])
+                            count = float(results[1])
+                            #print("TOTAL: ", total, "COUNT: ", count)
+                            average.append([total, count])
+                            count = 0
+                            total = 0
+                        except:
+                            print("ERROR: Could not perform calculation an avg calculation. ")
+                            continue
+                    else:
+                        if proto == 1: total, count = calc2(func, filt, directory, file, 1)
+                        else: total, count = calc2(func, filt, directory, file, 2)
+                        average.append([total, count])
+                        count = 0
+                        total = 0
+
+    if func == "count":
+        return count
+    elif func == "total":
+        return total
+    elif func == "avg":
+        try:
+            totalSum = 0
+            totalCount = 0
+            for item in average:
+                totalSum += item[0]
+                totalCount += item[1]
+            avg = totalSum / totalCount
+            return avg
+        except:
+            print("Error: Unable to perform calculation")
+    else: return None
