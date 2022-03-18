@@ -1,6 +1,7 @@
 import os
 import csv
-import pyqtgraph as pg
+import subprocess
+#import pyqtgraph as pg
 from  matplotlib import pyplot as plt
 import numpy as np
 
@@ -23,28 +24,76 @@ def graph(directory, graph, filters):
         indx2 = int(filters.index(value2))
 
         if graph == "plot":
+            pdf = False
+            print("'n' for feild 1(x) vs feild 2(y)")
+            print("If 'y' for PDF it uses the feild one only")
+            value = input("Would you like to Graph the PDF (y or n): ")
+            if value == "y":
+                pdf = True
+            else:
+                pdf = False
+
             plt.figure()
             plt.rcParams["figure.autolayout"] = True
-            #bytes = [0.01, 0.05, 0.1, 0.5, 1]
-            #flight = [50, 100, 500, 1000, 10000]
+
+            if "rtt" in value1:
+                start = 0.01
+                end = 1
+                step = 0.01
+            elif "bytes_in_flight" in value1:
+                start = 0
+                end = 100000
+                step = start*100
+            else:
+                start = 0
+                end = 2000
+                step = 500
+                
             for file in os.listdir(directory):
                 if file.endswith(".csv"):
                     with open(os.path.join(directory, file)) as f:
                         csv_reader = csv.reader(f, delimiter=',')
-                        i = 0
-                        for row in csv_reader:
-                            i = i+1
-                            print(i)
-                            if not row[indx2]:
-                                continue
-                            elif not row[indx1]:
-                                continue
-                            else:
-                             plt.plot(row[indx1], row[indx2], '*')
+                        xaxis = []
+                        yaxis = []
+                        count = 0
+                        if pdf == False:
+                            proc = subprocess.Popen("awk -F \",\" \"{a[$1]+=$2;b[$1]++}END{for(i \"in\" \"a){print\" i,a[i]/b[i]}}\" "+ os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                            temp1 = str(proc.communicate()[0].decode('ascii'))
+                            temp2 = temp1.split('\r\n')
+                            for i in temp2:
+                                temp = i.split(' ')
+                                if len(temp) < 2:
+                                    continue
+                                elif temp[1] == '0':
+                                    continue
+                                else:
+                                    xaxis.append(temp[0])
+                                    yaxis.append(temp[1])
+                            plt.plot(xaxis, yaxis, '*')
+                        else:
+                            #Gets the count
+                            proc = subprocess.Popen("awk -F \",\" \"BEGIN{count=0}($1!=\\\"\\\"){count=count+1}END{print count}\" "+ os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                            count += int(proc.communicate()[0].decode('ascii'))
+                            #Gets the values of each value for first field that is not empty.
+                            proc2 = subprocess.Popen("awk -F \",\" \"BEGIN{$1}($1!=\\\"\\\"){print $1}\" "+ os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                            temp1 = str(proc2.communicate()[0].decode('ascii'))
+                            temp2 = temp1.splitlines()
+                            for i in temp2:
+                                if len(i) < 2:
+                                    continue
+                                elif i == '0' or i == ' ':
+                                    continue
+                                else:
+                                    xaxis.append(i)
+                            x = np.sort(xaxis)
+                            y = np.arange(count) / float(count)
+                            plt.plot(x, y, '*')
+                            plt.yticks(np.arange(0, 1, 0.2))
+
             plt.xlabel(value1)
             plt.ylabel(value2)
+            #plt.xticks(np.arange(start, end, step))
             plt.show()
-
         elif graph == "scatter":
             print()
 
