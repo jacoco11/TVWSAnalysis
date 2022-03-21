@@ -12,7 +12,8 @@ def process(directory, filters):
                 filename2 = os.path.splitext(file)[0] + '.csv'
                 with open(directory + "\\" + filename2, "w") as outfile:
                     command = []
-                    commandBegin = ["tshark.exe", "-r", os.path.join(directory, file)]
+                    #set to tshark directory for proper functionality.
+                    commandBegin = ["C:/Program Files (x86)/Wireshark/tshark.exe", "-r", os.path.join(directory, file)]
                     for item in commandBegin:
                         command.append(item)
                     # fields = " ".join(str(e) for e in __filters2) #list to string

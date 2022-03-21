@@ -3,14 +3,33 @@ import csv
 import subprocess
 #import pyqtgraph as pg
 from  matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+import glob
+import pandas as pd
 import numpy as np
+import TVWS_graphPacketTypes
 
 
 # Function for data visualization on processed data
 def graph(directory, graph, filters):
     # Graph data points
+    check = True
+    while check:
+        graphPacketTypes = input("Graph all Packet types of all pcap files in directory? (y/n)\n" + "Type 'n' to continue to graph processed data.")
+        if graphPacketTypes == "y":
+            check = False
+            TVWS_graphPacketTypes.capgraph(directory)
+        elif graphPacketTypes == "n":
+            check = False
+        else:
+            print("Please enter a valid entry\n")
+
+    #START OF GRAPHING PROCESSED DATA-------------------------------------------------------
+
     if graph != None:
         check2 = True
+        if graph == "bar":
+            check2 = False
         while check2:
             value1 = input("Enter field 1: ")
             value2 = input("Enter field 2: ")
@@ -20,8 +39,8 @@ def graph(directory, graph, filters):
                 check2 = False
             else:
                 print("Invalid field(s), re-enter. ")
-        indx1 = int(filters.index(value1))
-        indx2 = int(filters.index(value2))
+            indx1 = int(filters.index(value1))
+            indx2 = int(filters.index(value2))
 
         if graph == "plot":
             pdf = False
@@ -98,11 +117,22 @@ def graph(directory, graph, filters):
             print()
 
         elif graph == "bar":
-            fig = plt.figure()
-            ax = fig.add_axes([0,0,1,1])
-            ax.bar(value1,value2)
-            plt.show()
-            print()
+            check3 = True
+            while check3:
+                value1 = input("Enter a Field to graph from previously selected Filters: ")
+                if value1 in filters:
+                    check3 = False
+                else:
+                    print("Invalid field(s), re-enter. ")
+            indx1 = int(filters.index(value1))
 
+            csv_files = glob.glob(directory + "\*.csv")
+            for file in csv_files:
+                print("Reading from csv file: ", csv_files)
+                xaxis = pd.read_csv(file)
+                xaxis.plot()
+                plt.ylabel("Frequency")
+                plt.show()
+            print("All files Graphed.")
     else:
         print("No graph type selected. ")
