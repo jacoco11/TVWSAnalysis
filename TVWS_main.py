@@ -11,7 +11,6 @@ filters = []
 totalCalcs = {}
 avgCalcs = {}
 
-
 # Function to set or update path of current working directory
 def set_directory():
     global directory

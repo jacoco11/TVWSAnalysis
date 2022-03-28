@@ -8,6 +8,7 @@ import glob
 import pandas as pd
 import numpy as np
 import TVWS_graphPacketTypes
+import TVWS_process
 
 
 # Function for data visualization on processed data
@@ -117,22 +118,112 @@ def graph(directory, graph, filters):
             print()
 
         elif graph == "bar":
-            check3 = True
-            while check3:
-                value1 = input("Enter a Field to graph from previously selected Filters: ")
-                if value1 in filters:
-                    check3 = False
-                else:
-                    print("Invalid field(s), re-enter. ")
-            indx1 = int(filters.index(value1))
+            looptyloop = True
+            while looptyloop:
+                value1 = input("Info for help\nEnter what you want graphed: ")
+                if value1 == "exit": looptyloop = False
+                if(value1 == "info"):
+                    print("Bar Graph Info: " +
+                    "\n- 'PercentFlow' : graphs completed/failed flows" +
+                    "\n- 'AggregateBytes' : graphs Aggregate byte size" +
+                    "\n- 'AverageFlow' : graphs Average Flow size" +
+                    "\n- 'exit' : exit back to main menu")
+                elif(value1.lower() == "percentflow"):
+                    filters.clear()
+                    filters.append("tcp.analysis.lost_segment")
+                    value = "tcp.analysis.lost_segment"
+                    indx = int(filters.index(value))
+                    indx = indx + 1
+                    indx = str(indx)
+                    filters.clear()
+                    filters.append("tcp")
+                    value = "tcp"
+                    indx2 = int(filters.index(value))
+                    indx2 = indx2 + 1
+                    indx2 = str(indx2)
+                    total = 0
+                    totalfail = 0
 
-            csv_files = glob.glob(directory + "\*.csv")
-            for file in csv_files:
-                print("Reading from csv file: ", csv_files)
-                xaxis = pd.read_csv(file)
-                xaxis.plot()
-                plt.ylabel("Frequency")
-                plt.show()
-            print("All files Graphed.")
-    else:
-        print("No graph type selected. ")
+                    for file in os.listdir(directory):
+                        if file.endswith(".csv"):
+                            try:
+                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($"+indx+"!=\\\"\\\"){total=total+$"+indx+"}END{print total}\" "
+                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                                totalfail += float(proc.communicate()[0].decode('ascii'))
+                            except:
+                                print("ERROR: Could not perform failed TCP calculation. ")
+                            try:
+                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($"+indx2+"!=\\\"\\\"){total=total+$"+indx2+"}END{print total}\" "
+                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                                total += float(proc.communicate()[0].decode('ascii'))
+                            except:
+                                print("ERROR: Could not perform TCP calculation. ")
+                    print(total)
+                    print (totalfail)
+                    looptyloop = False
+                elif(value1.lower() == "aggregatebytes"):
+                    filters.append("tcp.hdr_len")
+                    filters.append("tcp.len")
+                    #TVWS_process.process(directory, filters)
+                    filters.clear()
+                    filters.append("tcp.len")
+                    value = "tcp.len"
+                    indx = int(filters.index(value))
+                    indx = indx + 1
+                    indx = str(indx)
+                    totalLen = 0
+                    totalHdrLen = 0
+
+                    for file in os.listdir(directory):
+                        if file.endswith(".csv"):
+                            try:
+                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{totalLen=0}($"+indx+"!=\\\"\\\"){totalLen=totalLen+$"+indx+"}END{print $2}\" " #I want this to only read
+                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)                                            #a specific column but am stuck
+                                totalLen += float(proc.communicate()[0].decode('ascii'))                                                                    #prints row instead
+                            except:
+                                print("ERROR: Could not perform failed TotalLen calculation. ")
+
+                    print(totalLen)
+                    filters.clear()
+                    filters.append("tcp.hdr_len")
+                    value = "tcp.hdr_len"
+                    indx2 = int(filters.index(value))
+                    indx2 = indx2 + 1
+                    indx2 = str(indx2)
+
+                    for file in os.listdir(directory):
+                        if file.endswith(".csv"):
+                            try:
+                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{totalHdrLen=0}($"+indx2+"!=\\\"\\\"){totalHdrLen=totalHdrLen+$"+indx2+"}END{print $1}\" "
+                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
+                                totalHdrLen += float(proc.communicate()[0].decode('ascii'))
+                            except:
+                                print("ERROR: Could not perform TotalHdrLen calculation. ")
+
+                    print(totalLen)
+                    print(totalHdrLen)
+                    totalLen = totalLen - totalHdrLen
+                    print(totalLen)
+                    looptyloop = False
+                elif(value1.lower() == "averageflow"):
+                    looptyloop = False
+                    
+            #check3 = True
+            #while check3:
+             #   value1 = input("Enter a Field to graph from previously selected Filters: ")
+              #  if value1 in filters:
+               #     check3 = False
+                #else:
+                 #   print("Invalid field(s), re-enter. ")
+            #indx1 = int(filters.index(value1))
+
+            #csv_files = glob.glob(directory + "\*.csv")
+            #for file in csv_files:
+             #   print("Reading from csv file: ", csv_files)
+              #  xaxis = pd.read_csv(file)
+               # xaxis.plot()
+                #plt.ylabel("Frequency")
+                #plt.show()
+            #print("All files Graphed.")
+    #else:
+     #   print("No graph type selected. ")
