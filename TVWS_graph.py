@@ -2,31 +2,16 @@ import os
 import csv
 import subprocess
 #import pyqtgraph as pg
-from  matplotlib import pyplot as plt
 import matplotlib.pyplot as plt
 import glob
 import pandas as pd
 import numpy as np
-import TVWS_graphPacketTypes
 import TVWS_process
-
+import TVWS_tools1
+#
 
 # Function for data visualization on processed data
 def graph(directory, graph, filters):
-    # Graph data points
-    check = True
-    while check:
-        graphPacketTypes = input("Graph all Packet types of all pcap files in directory? (y/n)\n" + "Type 'n' to continue to graph processed data.")
-        if graphPacketTypes == "y":
-            check = False
-            TVWS_graphPacketTypes.capgraph(directory)
-        elif graphPacketTypes == "n":
-            check = False
-        else:
-            print("Please enter a valid entry\n")
-
-    #START OF GRAPHING PROCESSED DATA-------------------------------------------------------
-
     if graph != None:
         check2 = True
         if graph == "bar":
@@ -127,103 +112,47 @@ def graph(directory, graph, filters):
                     "\n- 'PercentFlow' : graphs completed/failed flows" +
                     "\n- 'AggregateBytes' : graphs Aggregate byte size" +
                     "\n- 'AverageFlow' : graphs Average Flow size" +
+                    "\n- 'AvgTCPStat' : generates table of average TCP statistics" +
                     "\n- 'exit' : exit back to main menu")
                 elif(value1.lower() == "percentflow"):
-                    filters.clear()
-                    filters.append("tcp.analysis.lost_segment")
-                    value = "tcp.analysis.lost_segment"
-                    indx = int(filters.index(value))
-                    indx = indx + 1
-                    indx = str(indx)
-                    filters.clear()
-                    filters.append("tcp")
-                    value = "tcp"
-                    indx2 = int(filters.index(value))
-                    indx2 = indx2 + 1
-                    indx2 = str(indx2)
-                    total = 0
-                    totalfail = 0
-
-                    for file in os.listdir(directory):
-                        if file.endswith(".csv"):
-                            try:
-                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($"+indx+"!=\\\"\\\"){total=total+$"+indx+"}END{print total}\" "
-                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
-                                totalfail += float(proc.communicate()[0].decode('ascii'))
-                            except:
-                                print("ERROR: Could not perform failed TCP calculation. ")
-                            try:
-                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{total=0}($"+indx2+"!=\\\"\\\"){total=total+$"+indx2+"}END{print total}\" "
-                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
-                                total += float(proc.communicate()[0].decode('ascii'))
-                            except:
-                                print("ERROR: Could not perform TCP calculation. ")
-                    print(total)
-                    print (totalfail)
                     looptyloop = False
-                elif(value1.lower() == "aggregatebytes"):
-                    filters.append("tcp.hdr_len")
-                    filters.append("tcp.len")
-                    #TVWS_process.process(directory, filters)
-                    filters.clear()
-                    filters.append("tcp.len")
-                    value = "tcp.len"
-                    indx = int(filters.index(value))
-                    indx = indx + 1
-                    indx = str(indx)
-                    totalLen = 0
-                    totalHdrLen = 0
-
-                    for file in os.listdir(directory):
-                        if file.endswith(".csv"):
-                            try:
-                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{totalLen=0}($"+indx+"!=\\\"\\\"){totalLen=totalLen+$"+indx+"}END{print $2}\" " #I want this to only read
-                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)                                            #a specific column but am stuck
-                                totalLen += float(proc.communicate()[0].decode('ascii'))                                                                    #prints row instead
-                            except:
-                                print("ERROR: Could not perform failed TotalLen calculation. ")
-
-                    print(totalLen)
-                    filters.clear()
-                    filters.append("tcp.hdr_len")
-                    value = "tcp.hdr_len"
-                    indx2 = int(filters.index(value))
-                    indx2 = indx2 + 1
-                    indx2 = str(indx2)
-
-                    for file in os.listdir(directory):
-                        if file.endswith(".csv"):
-                            try:
-                                proc = subprocess.Popen("awk -F \",\" \"BEGIN{totalHdrLen=0}($"+indx2+"!=\\\"\\\"){totalHdrLen=totalHdrLen+$"+indx2+"}END{print $1}\" "
-                                            + os.path.join(directory, file), shell=True, stdout=subprocess.PIPE)
-                                totalHdrLen += float(proc.communicate()[0].decode('ascii'))
-                            except:
-                                print("ERROR: Could not perform TotalHdrLen calculation. ")
-
-                    print(totalLen)
-                    print(totalHdrLen)
-                    totalLen = totalLen - totalHdrLen
-                    print(totalLen)
+                elif(value1.lower() == "aggregatebytes"):   
                     looptyloop = False
                 elif(value1.lower() == "averageflow"):
                     looptyloop = False
-                    
-            #check3 = True
-            #while check3:
-             #   value1 = input("Enter a Field to graph from previously selected Filters: ")
-              #  if value1 in filters:
-               #     check3 = False
-                #else:
-                 #   print("Invalid field(s), re-enter. ")
-            #indx1 = int(filters.index(value1))
-
-            #csv_files = glob.glob(directory + "\*.csv")
-            #for file in csv_files:
-             #   print("Reading from csv file: ", csv_files)
-              #  xaxis = pd.read_csv(file)
-               # xaxis.plot()
-                #plt.ylabel("Frequency")
-                #plt.show()
-            #print("All files Graphed.")
-    #else:
-     #   print("No graph type selected. ")
+                elif(value1.lower() == "avgtcpstat"):
+                    fig, ax = plt.subplots()
+                    table_data=[]
+                    filters.append("tcp.len")
+                    filters.append("tcp.analysis.ack_rtt")
+                    filters.append("tcp.analysis.fast_retransmission")
+                    filters.append("tcp.analysis.retransmission")
+                    filters.append("tcp.flags")
+                    ans = input("Process files? No if already processed. (y/n): ")
+                    if ans.lower() == "y":
+                        TVWS_process.process(directory, filters, "", "", "")
+                    sizeOfFiles = TVWS_tools1.calc("total", "tcp.len", filters, directory, "1", "", "")/8589934592 # Bytes -> GB
+                    print(sizeOfFiles)
+                    totalPackets = TVWS_tools1.calc("count", "tcp.len", filters, directory, "1", "", "")
+                    print(totalPackets)
+                    totalControlPackets = TVWS_tools1.calc("count", "cpkt", filters, directory, "1", "", "")
+                    print(totalControlPackets)
+                    avgRTT = TVWS_tools1.calc("avg", "tcp.analysis.ack_rtt", filters, directory, "1", "", "")
+                    print(avgRTT)
+                    totalRetransmissions = (TVWS_tools1.calc("total", "tcp.analysis.fast_retransmission", filters, directory, "1", "", "") +
+                    TVWS_tools1.calc("total", "tcp.analysis.retransmission", filters, directory, "1", "", ""))
+                    print(totalRetransmissions)
+                    table_data.append(sizeOfFiles)
+                    table_data.append(totalPackets)
+                    table_data.append(totalControlPackets)
+                    table_data.append(avgRTT)
+                    table_data.append(totalRetransmissions)
+                    data=[]
+                    data.append(table_data) # Tables require an array inside an array???
+                    print(table_data)
+                    column_labels=["Total GB", "Total Packets", "Total control packets (%)", "Average RTT(s)", "Total retransmissions(%)"]
+                    the_table = ax.table(fontsize=40,cellText=data,colLabels=column_labels, loc="center")
+                    ax.axis('off')
+                    the_table.set_fontsize(20)
+                    plt.show()
+                    looptyloop == False
