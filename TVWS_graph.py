@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import TVWS_process
 import TVWS_tools1
+import TVWS_tools2
 #
 
 # Function for data visualization on processed data
@@ -104,16 +105,56 @@ def graph(directory, graph, filters):
 
         elif graph == "bar":
             looptyloop = True
+            table_data=[]
+            data=[]
+            avgTotalCount=[]
+            inpt = "" #holds avg total or count current value to test while loop.
+            i = 0 #used to hold index
             while looptyloop:
                 value1 = input("Info for help\nEnter what you want graphed: ")
                 if value1 == "exit": looptyloop = False
                 if(value1 == "info"):
                     print("Bar Graph Info: " +
+                    "\n- 'GenericTable' : Input any filters to be presented in a table" +
+                    "\n- 'GenericBar' : Input any filters to be presented in a Bar Graph" +
                     "\n- 'PercentFlow' : graphs completed/failed flows" +
                     "\n- 'AggregateBytes' : graphs Aggregate byte size" +
                     "\n- 'AverageFlow' : graphs Average Flow size" +
                     "\n- 'AvgTCPStat' : generates table of average TCP statistics" +
                     "\n- 'exit' : exit back to main menu")
+                elif(value1.lower() == "generictable"):
+                    moreFilters = input("Would you like to add additional filters to be processed? this will clear current filters. (Y/N): ")
+                    filters.clear()
+                    if moreFilters.lower() == "y":
+                        while moreFilters != "n":
+                            moreFilters = input("Enter which filters to add or 'n' to exit: ")
+                            if moreFilters != "n":
+                                while inpt not in ("avg","total","count"):
+                                    inpt = input("Would you like to calculate the Average, Total, or individual Count for this filter?(avg/total/count): ")
+                                avgTotalCount.append(inpt)
+                                inpt = ""
+                                filters.append(moreFilters)
+                                moreFilters = ""
+                    ans = input("Process files? No if already processed. (y/n): ")
+                    if ans.lower() == "y":
+                        TVWS_process.process(directory, filters, "", "", "")
+                    for filt in filters:
+                        filt = filters[i]
+                        aTC = avgTotalCount[i]
+                        table_data.append(TVWS_tools1.calc(aTC, filt, filters, directory, "1", "", ""))
+                        print(table_data)
+                        i = i + 1
+                    data.append(table_data) # Tables require an array inside an array???
+                    data.append(avgTotalCount)
+                    print(data)
+                    fig, ax = plt.subplots()
+                    the_table = ax.table(fontsize=40,cellText=data,colLabels=filters, loc="center")
+                    ax.axis('off')
+                    the_table.set_fontsize(20)
+                    plt.show()
+                    table_data.clear()
+                    data.clear()
+                    looptyloop = False
                 elif(value1.lower() == "percentflow"):
                     looptyloop = False
                 elif(value1.lower() == "aggregatebytes"):   
@@ -122,7 +163,6 @@ def graph(directory, graph, filters):
                     looptyloop = False
                 elif(value1.lower() == "avgtcpstat"):
                     fig, ax = plt.subplots()
-                    table_data=[]
                     filters.append("tcp.len")
                     filters.append("tcp.analysis.ack_rtt")
                     filters.append("tcp.analysis.fast_retransmission")
@@ -147,7 +187,6 @@ def graph(directory, graph, filters):
                     table_data.append(totalControlPackets)
                     table_data.append(avgRTT)
                     table_data.append(totalRetransmissions)
-                    data=[]
                     data.append(table_data) # Tables require an array inside an array???
                     print(table_data)
                     column_labels=["Total GB", "Total Packets", "Total control packets (%)", "Average RTT(s)", "Total retransmissions(%)"]
@@ -155,4 +194,6 @@ def graph(directory, graph, filters):
                     ax.axis('off')
                     the_table.set_fontsize(20)
                     plt.show()
+                    table_data.clear()
+                    data.clear()
                     looptyloop == False
