@@ -105,11 +105,11 @@ def graph(directory, graph, filters):
 
         elif graph == "bar":
             looptyloop = True
-            table_data=[]
-            data=[]
+            table_data=[] # table graph data
+            bar_data=[] #bar graph data
+            data=[] #holds either table or bar data because graphs need an array inside an array to work
             avgTotalCount=[]
             inpt = "" #holds avg total or count current value to test while loop.
-            i = 0 #used to hold index
             while looptyloop:
                 value1 = input("Info for help\nEnter what you want graphed: ")
                 if value1 == "exit": looptyloop = False
@@ -123,18 +123,18 @@ def graph(directory, graph, filters):
                     "\n- 'AvgTCPStat' : generates table of average TCP statistics" +
                     "\n- 'exit' : exit back to main menu")
                 elif(value1.lower() == "generictable"):
-                    moreFilters = input("Would you like to add additional filters to be processed? this will clear current filters. (Y/N): ")
+                    i = 0 #used to hold index
+                    moreFilters = ""
                     filters.clear()
-                    if moreFilters.lower() == "y":
-                        while moreFilters != "n":
-                            moreFilters = input("Enter which filters to add or 'n' to exit: ")
-                            if moreFilters != "n":
-                                while inpt not in ("avg","total","count"):
-                                    inpt = input("Would you like to calculate the Average, Total, or individual Count for this filter?(avg/total/count): ")
-                                avgTotalCount.append(inpt)
-                                inpt = ""
-                                filters.append(moreFilters)
-                                moreFilters = ""
+                    while moreFilters != "n":
+                        moreFilters = input("Enter which filters to add to graph or 'n' to exit: ")
+                        if moreFilters != "n":
+                            while inpt not in ("avg","total","count"):
+                                inpt = input("Would you like to calculate the Average, Total, or individual Count for " + moreFilters + " (avg/total/count): ")
+                            avgTotalCount.append(inpt)
+                            inpt = ""
+                            filters.append(moreFilters)
+                            moreFilters = ""
                     ans = input("Process files? No if already processed. (y/n): ")
                     if ans.lower() == "y":
                         TVWS_process.process(directory, filters, "", "", "")
@@ -162,7 +162,7 @@ def graph(directory, graph, filters):
                 elif(value1.lower() == "averageflow"):
                     looptyloop = False
                 elif(value1.lower() == "avgtcpstat"):
-                    fig, ax = plt.subplots()
+                    ax = plt.subplots()
                     filters.append("tcp.len")
                     filters.append("tcp.analysis.ack_rtt")
                     filters.append("tcp.analysis.fast_retransmission")
@@ -195,5 +195,38 @@ def graph(directory, graph, filters):
                     the_table.set_fontsize(20)
                     plt.show()
                     table_data.clear()
+                    data.clear()
+                    looptyloop == False
+                elif(value1.lower() == "genericbar"):
+                    i = 0 #used to hold index
+                    moreFilters = ""
+                    filters.clear()
+                    while moreFilters != "n":
+                        moreFilters = input("Enter which filters to add to graph or 'n' to exit: ")
+                        if moreFilters != "n":
+                            while inpt not in ("avg","total","count"):
+                                inpt = input("Would you like to calculate the Average, Total, or individual Count for " + moreFilters + " (avg/total/count): ")
+                            avgTotalCount.append(inpt)
+                            inpt = ""
+                            filters.append(moreFilters)
+                            moreFilters = ""
+                    ans = input("Process files? No if already processed. (y/n): ")
+                    if ans.lower() == "y":
+                        TVWS_process.process(directory, filters, "", "", "")
+                    for filt in filters:
+                        filt = filters[i]
+                        aTC = avgTotalCount[i]
+                        bar_data.append(TVWS_tools1.calc(aTC, filt, filters, directory, "1", "", ""))
+                        print(bar_data)
+                        i = i + 1
+                    #data.append(bar_data)
+                    #aTC.append(avgTotalCount)
+                    print(data)
+                    xaxis = [','.join(pair) for pair in zip(filters,avgTotalCount)]
+                    plt.bar(xaxis,bar_data)
+                    plt.title("Generic Bar Graph")
+                    plt.xlabel("Inputted fields")
+                    plt.show()
+                    bar_data.clear()
                     data.clear()
                     looptyloop == False
