@@ -68,5 +68,7 @@ def barGraph(directory, filters):
     plt.title("Generic Bar Graph")
     plt.xlabel("Inputted fields")
     plt.show()
+    plt.savefig("GenericBarGraph.png")
     bar_data.clear()
     avgTotalCount.clear()
+    multipleDir.clear()

@@ -132,7 +132,7 @@ def graph(directory, graph, filters):
                 elif(value1.lower() == "averageflow"):
                     looptyloop = False
                 elif(value1.lower() == "avgtcpstat"):
-                    ax = plt.subplots()
+                    fig, ax = plt.subplots()
                     filters.append("tcp.len")
                     filters.append("tcp.analysis.ack_rtt")
                     filters.append("tcp.analysis.fast_retransmission")
@@ -164,6 +164,7 @@ def graph(directory, graph, filters):
                     ax.axis('off')
                     the_table.set_fontsize(20)
                     plt.show()
+                    plt.savefig("AvgTCPStatGraph.png")
                     table_data.clear()
                     data.clear()
                     looptyloop == False

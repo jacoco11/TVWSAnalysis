@@ -78,5 +78,6 @@ def tableGraph(directory, filters):
     ax.axis('off')
     the_table.set_fontsize(20)
     plt.show()
+    plt.savefig("GenericTableGraph.png")
     table_data.clear()
     data.clear()
